@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Frigurso Escuela</title>
+<meta name="theme-color" content="#0a1929">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#0a1929; --bg2:#0f2236; --card:#122b42; --card2:#16334d;
+  --border:#1e3a56; --text:#e8f1fb; --muted:#8fa8c2; --accent:#2ecc71;
+  --accent2:#27ae60; --blue:#3498db; --orange:#f39c12; --red:#e74c3c; --purple:#9b59b6;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+  background:var(--bg); color:var(--text); min-height:100vh;}
+a{color:inherit;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+
+/* ---------- Splash ---------- */
+#splash{position:fixed;inset:0;background:radial-gradient(circle at 50% 20%,#153450,#0a1929 70%);
+  display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;}
+.splash-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px 30px;
+  max-width:420px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);
+  animation:pop .4s ease;}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.splash-emoji{font-size:52px;margin-bottom:6px;}
+.splash-card h1{font-size:22px;margin:0 0 6px;}
+.splash-card p{color:var(--muted);font-size:14px;margin:0 0 20px;}
+.splash-card input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);
+  background:var(--bg2);color:var(--text);margin-bottom:12px;font-size:15px;}
+.splash-cta-wrap{margin-top:6px;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#052b12;border:none;
+  padding:12px 22px;border-radius:10px;font-weight:700;font-size:15px;width:100%;}
+
+/* ---------- App shell ---------- */
+#app{display:none;min-height:100vh;}
+#app.show{display:flex;}
+#sidebar{width:250px;background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;height:100vh;position:sticky;top:0;overflow-y:auto;}
+#sidebar-header{padding:18px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+#sidebar-header img{width:36px;height:36px;border-radius:8px;object-fit:cover;}
+#sidebar-header .emoji-logo{font-size:28px;}
+#sidebar-header .name{font-weight:700;font-size:15px;line-height:1.2;}
+#sidebar-header .sub{font-size:11px;color:var(--muted);}
+nav.navgroup{padding:10px 0;border-bottom:1px solid var(--border);}
+nav.navgroup .grouplabel{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
+  padding:6px 16px;}
+.navitem{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:14px;color:var(--muted);
+  border-left:3px solid transparent;}
+.navitem:hover{background:rgba(255,255,255,.03);color:var(--text);}
+.navitem.active{background:rgba(46,204,113,.12);color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+#main-wrap{flex:1;min-width:0;}
+#topbar{position:sticky;top:0;background:rgba(10,25,41,.9);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;z-index:10;}
+#topbar h2{margin:0;font-size:19px;}
+#burger{display:none;background:none;border:none;color:var(--text);font-size:22px;}
+#main-content{padding:22px 24px 60px;max-width:1180px;}
+
+/* ---------- Cards / tables ---------- */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:18px;}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.btn{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:9px 14px;
+  border-radius:9px;font-size:13.5px;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{border-color:var(--accent);}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#052b12;font-weight:700;}
+.btn.danger{color:#ffb4ab;}
+.btn.small{padding:5px 10px;font-size:12.5px;}
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.tab{padding:9px 16px;font-size:13.5px;color:var(--muted);border-bottom:2px solid transparent;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{text-align:left;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--border);
+  font-size:12px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;}
+td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.table-wrap{overflow-x:auto;}
+.empty{color:var(--muted);text-align:center;padding:30px;font-size:14px;}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.filters select,.filters input{padding:7px 10px;border-radius:8px;border:1px solid var(--border);
+  background:var(--bg2);color:var(--text);font-size:13px;}
+.badge{padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;display:inline-block;}
+.badge.green{background:rgba(46,204,113,.15);color:var(--accent);}
+.badge.red{background:rgba(231,76,60,.15);color:#ff8b7d;}
+.badge.orange{background:rgba(243,156,18,.15);color:#ffc266;}
+.badge.blue{background:rgba(52,152,219,.15);color:#7ec3f0;}
+.badge.gray{background:rgba(255,255,255,.08);color:var(--muted);}
+
+/* ---------- Modal ---------- */
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-start;
+  justify-content:center;z-index:200;overflow-y:auto;padding:40px 16px;}
+#modal-overlay.show{display:flex;}
+#modal-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;
+  max-width:520px;width:100%;animation:pop .25s ease;}
+#modal-box h3{margin:0 0 16px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;border-radius:9px;
+  border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;}
+.field textarea{min-height:70px;resize:vertical;}
+.checklist{display:flex;flex-wrap:wrap;gap:8px;max-height:140px;overflow-y:auto;padding:8px;
+  border:1px solid var(--border);border-radius:9px;background:var(--bg2);}
+.checklist label{display:flex;align-items:center;gap:5px;font-size:13px;background:var(--card2);
+  padding:5px 9px;border-radius:7px;}
+.modal-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;}
+
+/* ---------- Dashboard ---------- */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+.kpi .num{font-size:26px;font-weight:800;}
+.kpi .lbl{font-size:12.5px;color:var(--muted);margin-top:2px;}
+.section-title{font-size:15px;font-weight:700;margin:24px 0 10px;color:var(--accent);}
+
+@media(max-width:820px){
+  #sidebar{position:fixed;left:-260px;top:0;z-index:100;transition:left .2s;box-shadow:0 0 40px rgba(0,0,0,.5);}
+  #sidebar.open{left:0;}
+  #burger{display:block;}
+  #main-content{padding:18px 14px 60px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= SPLASH (first run) ================= -->
+<div id="splash">
+  <div class="splash-card">
+    <div class="splash-emoji">🏫</div>
+    <h1>Frigurso Escuela</h1>
+    <p>Antes de arrancar, contame el nombre de tu escuela. Todo se guarda localmente en esta computadora.</p>
+    <input id="splash-nombre" type="text" placeholder="Nombre de la escuela *">
+    <input id="splash-direccion" type="text" placeholder="Dirección (opcional)">
+    <div class="splash-cta-wrap">
+      <button class="btn-primary" onclick="finishSplash()">Empezar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="app">
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <span class="emoji-logo" id="sb-logo">🏫</span>
+      <div>
+        <div class="name" id="sb-nombre">Frigurso Escuela</div>
+        <div class="sub">Gestión integral</div>
+      </div>
+    </div>
+    <div id="nav-container"></div>
+  </div>
+
+  <div id="main-wrap">
+    <div id="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button id="burger" onclick="toggleSidebar()">☰</button>
+        <h2 id="page-title">Inicio</h2>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn small" onclick="navGo('config')">⚙️ Config</button>
+        <button class="btn small" onclick="navGo('backup')">💾 Backup</button>
+      </div>
+    </div>
+    <div id="main-content"></div>
+  </div>
+</div>
+
+<!-- ================= MODAL ================= -->
+<div id="modal-overlay">
+  <div id="modal-box"></div>
+</div>
+
+<script>
+/* =========================================================================
+   FRIGURSO ESCUELA — app monolítica, 100% local (IndexedDB), sin backend.
+   ========================================================================= */
+
+/* ---------------------------------------------------------------------
+   1. BASE DE DATOS (IndexedDB)
+--------------------------------------------------------------------- */
+const DB_NAME = 'frigurso_escuela_db';
+const DB_VERSION = 1;
+const STORES = ['config','grados','aulas','materias','docentes','alumnos','planificaciones',
+  'calificaciones','presentismo','amonestaciones','actos','ausenciasDocentes','porteria',
+  'insumos','obras','viajes','alquileres','caja','donaciones','cooperadora'];
+
+let db;
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      STORES.forEach(s=>{ if(!d.objectStoreNames.contains(s)) d.createObjectStore(s,{keyPath:'id',autoIncrement:true}); });
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = e => reject(e);
+  });
+}
+function txStore(store,mode='readonly'){ return db.transaction(store,mode).objectStore(store); }
+function dbGetAll(store){ return new Promise((res,rej)=>{ const r=txStore(store).getAll(); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+function dbGet(store,id){ return new Promise((res,rej)=>{ const r=txStore(store).get(id); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+function dbPut(store,obj){ return new Promise((res,rej)=>{ const r=txStore(store,'readwrite').put(obj); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+function dbDelete(store,id){ return new Promise((res,rej)=>{ const r=txStore(store,'readwrite').delete(id); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); }); }
+function dbClear(store){ return new Promise((res,rej)=>{ const r=txStore(store,'readwrite').clear(); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); }); }
+
+/* ---------------------------------------------------------------------
+   2. UTILIDADES
+--------------------------------------------------------------------- */
+function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; }
+function qs(sel,root){ return (root||document).querySelector(sel); }
+function fmtMoney(n){ return '$ ' + (Number(n)||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtDate(d){ if(!d) return '—'; const [y,m,dd]=d.split('-'); return dd&&m&&y?`${dd}/${m}/${y}`:d; }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function escapeHtml(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------------------------------------------------------------------
+   3. DEFINICIÓN DE MÓDULOS (motor genérico de CRUD)
+--------------------------------------------------------------------- */
+const MODULES = {
+  grados:{
+    label:'Grados', icon:'🏫', group:'academico',
+    fields:[
+      {key:'nombre',label:'Nombre (ej: 1° Grado A)',type:'text',required:true},
+      {key:'turno',label:'Turno',type:'select',options:['Mañana','Tarde','Jornada completa']},
+      {key:'docenteTitularId',label:'Docente titular',type:'ref',ref:'docentes',display:'nombre'},
+    ],
+    list:['nombre','turno','docenteTitularId']
+  },
+  materias:{
+    label:'Materias', icon:'📘', group:'academico',
+    fields:[ {key:'nombre',label:'Nombre',type:'text',required:true} ],
+    list:['nombre']
+  },
+  alumnos:{
+    label:'Alumnos', icon:'🧒', group:'academico',
+    fields:[
+      {key:'nombre',label:'Nombre completo',type:'text',required:true},
+      {key:'dni',label:'DNI',type:'text'},
+      {key:'fechaNacimiento',label:'Fecha de nacimiento',type:'date'},
+      {key:'gradoId',label:'Grado',type:'ref',ref:'grados',display:'nombre',filterable:true},
+      {key:'estado',label:'Estado',type:'select',options:['Activo','Pase a otra escuela','Egresado','Baja'],filterable:true},
+      {key:'contactoNombre',label:'Contacto familiar',type:'text'},
+      {key:'contactoTelefono',label:'Teléfono de contacto',type:'text'},
+      {key:'direccion',label:'Dirección',type:'text'},
+    ],
+    list:['nombre','dni','gradoId','estado']
+  },
+  planificaciones:{
+    label:'Planificaciones', icon:'📝', group:'academico',
+    fields:[
+      {key:'titulo',label:'Título / Unidad',type:'text',required:true},
+      {key:'docenteId',label:'Docente',type:'ref',ref:'docentes',display:'nombre',filterable:true},
+      {key:'materiaId',label:'Materia',type:'ref',ref:'materias',display:'nombre',filterable:true},
+      {key:'gradoId',label:'Grado',type:'ref',ref:'grados',display:'nombre',filterable:true},
+      {key:'periodo',label:'Período',type:'select',options:['1er Trimestre','2do Trimestre','3er Trimestre','Anual'],filterable:true},
+      {key:'objetivos',label:'Objetivos',type:'textarea'},
+      {key:'contenidos',label:'Contenidos',type:'textarea'},
+      {key:'actividades',label:'Actividades',type:'textarea'},
+      {key:'evaluacion',label:'Criterios de evaluación',type:'textarea'},
+      {key:'fechaInicio',label:'Fecha inicio',type:'date'},
+      {key:'fechaFin',label:'Fecha fin',type:'date'},
+      {key:'estado',label:'Estado',type:'select',options:['Borrador','Aprobada','En curso','Finalizada'],filterable:true},
+    ],
+    list:['titulo','docenteId','materiaId','gradoId','periodo','estado']
+  },
+  amonestaciones:{
+    label:'Amonestaciones', icon:'⚠️', group:'academico',
+    fields:[
+      {key:'alumnoId',label:'Alumno',type:'ref',ref:'alumnos',display:'nombre',required:true,filterable:true},
+      {key:'fecha',label:'Fecha',type:'date',required:true},
+      {key:'gravedad',label:'Gravedad',type:'select',options:['Leve','Grave','Muy grave'],filterable:true},
+      {key:'motivo',label:'Motivo',type:'textarea'},
+      {key:'medidas',label:'Medidas tomadas',type:'textarea'},
+      {key:'docenteId',label:'Docente que la registra',type:'ref',ref:'docentes',display:'nombre'},
+    ],
+    list:['alumnoId','fecha','gravedad','motivo']
+  },
+  docentes:{
+    label:'Docentes', icon:'🧑‍🏫', group:'personal',
+    fields:[
+      {key:'nombre',label:'Nombre completo',type:'text',required:true},
+      {key:'dni',label:'DNI',type:'text'},
+      {key:'telefono',label:'Teléfono',type:'text'},
+      {key:'email',label:'Email',type:'text'},
+      {key:'fechaIngreso',label:'Fecha de ingreso',type:'date'},
+      {key:'materiaIds',label:'Materias que dicta',type:'multiref',ref:'materias',display:'nombre'},
+      {key:'gradoIds',label:'Grados a cargo',type:'multiref',ref:'grados',display:'nombre'},
+    ],
+    list:['nombre','dni','telefono','email']
+  },
+  ausenciasDocentes:{
+    label:'Asistencia Docentes', icon:'📋', group:'personal',
+    fields:[
+      {key:'docenteId',label:'Docente',type:'ref',ref:'docentes',display:'nombre',required:true,filterable:true},
+      {key:'fecha',label:'Fecha',type:'date',required:true},
+      {key:'tipo',label:'Tipo',type:'select',options:['Justificada','Injustificada'],filterable:true},
+      {key:'motivo',label:'Motivo',type:'textarea'},
+      {key:'certificado',label:'Presentó certificado',type:'checkbox'},
+    ],
+    list:['docenteId','fecha','tipo','motivo'],
+    extraTabs:[{key:'stats',label:'📊 Estadísticas',render:renderStatsDocentes}]
+  },
+  aulas:{
+    label:'Aulas / Salones', icon:'🚪', group:'edificio',
+    fields:[
+      {key:'nombre',label:'Nombre / Número',type:'text',required:true},
+      {key:'capacidad',label:'Capacidad',type:'number'},
+      {key:'estado',label:'Estado',type:'select',options:['Operativa','En reparación','Clausurada'],filterable:true},
+      {key:'notas',label:'Notas',type:'textarea'},
+    ],
+    list:['nombre','capacidad','estado']
+  },
+  insumos:{
+    label:'Insumos', icon:'📦', group:'edificio',
+    fields:[
+      {key:'nombre',label:'Nombre del insumo',type:'text',required:true},
+      {key:'categoria',label:'Categoría',type:'text'},
+      {key:'stock',label:'Stock actual',type:'number'},
+      {key:'unidad',label:'Unidad',type:'text'},
+      {key:'stockMinimo',label:'Stock mínimo',type:'number'},
+      {key:'ultimaCompra',label:'Última compra',type:'date'},
+    ],
+    list:['nombre','categoria','stock','unidad','stockMinimo']
+  },
+  obras:{
+    label:'Obras y Necesidades', icon:'🛠️', group:'edificio',
+    fields:[
+      {key:'titulo',label:'Título',type:'text',required:true},
+      {key:'categoria',label:'Categoría',type:'select',options:['Construcción','Arreglo / Mantenimiento']},
+      {key:'descripcion',label:'Descripción',type:'textarea'},
+      {key:'costoEstimado',label:'Costo estimado',type:'number'},
+      {key:'costoReal',label:'Costo real',type:'number'},
+      {key:'estado',label:'Estado',type:'select',options:['Pendiente','En curso','Terminado'],filterable:true},
+      {key:'fechaInicio',label:'Fecha inicio',type:'date'},
+      {key:'fechaFin',label:'Fecha fin',type:'date'},
+    ],
+    list:['titulo','categoria','estado','costoEstimado','costoReal']
+  },
+  alquileres:{
+    label:'Alquiler de Salón', icon:'🎪', group:'edificio',
+    fields:[
+      {key:'aulaId',label:'Salón',type:'ref',ref:'aulas',display:'nombre'},
+      {key:'fecha',label:'Fecha',type:'date',required:true},
+      {key:'horaInicio',label:'Hora inicio',type:'text'},
+      {key:'horaFin',label:'Hora fin',type:'text'},
+      {key:'solicitante',label:'Solicitante',type:'text'},
+      {key:'monto',label:'Monto',type:'number'},
+      {key:'pagado',label:'Pagado',type:'checkbox'},
+      {key:'notas',label:'Notas',type:'textarea'},
+    ],
+    list:['aulaId','fecha','solicitante','monto','pagado']
+  },
+  porteria:{
+    label:'Portería', icon:'🔔', group:'edificio',
+    fields:[
+      {key:'fecha',label:'Fecha',type:'date',required:true},
+      {key:'hora',label:'Hora',type:'text'},
+      {key:'tipo',label:'Tipo',type:'select',options:['Entrada','Salida','Incidencia','Visita']},
+      {key:'persona',label:'Persona',type:'text'},
+      {key:'descripcion',label:'Descripción',type:'textarea'},
+    ],
+    list:['fecha','hora','tipo','persona']
+  },
+  actos:{
+    label:'Actos Escolares', icon:'🎉', group:'eventos',
+    fields:[
+      {key:'titulo',label:'Título',type:'text',required:true},
+      {key:'fecha',label:'Fecha',type:'date',required:true},
+      {key:'tipo',label:'Tipo',type:'text'},
+      {key:'responsable',label:'Responsable',type:'text'},
+      {key:'descripcion',label:'Descripción',type:'textarea'},
+      {key:'estado',label:'Estado',type:'select',options:['Planificado','Confirmado','Realizado','Suspendido']},
+    ],
+    list:['titulo','fecha','tipo','responsable','estado']
+  },
+  viajes:{
+    label:'Viajes de Egresados', icon:'🚌', group:'eventos',
+    fields:[
+      {key:'destino',label:'Destino',type:'text',required:true},
+      {key:'fecha',label:'Fecha',type:'date'},
+      {key:'costoTotal',label:'Costo total del viaje',type:'number'},
+      {key:'costoPorAlumno',label:'Costo por alumno',type:'number'},
+      {key:'participantes',label:'Participantes / notas de pago',type:'textarea'},
+      {key:'estado',label:'Estado',type:'select',options:['En organización','Confirmado','Realizado','Cancelado']},
+    ],
+    list:['destino','fecha','costoTotal','costoPorAlumno','estado']
+  },
+  caja:{
+    label:'Caja', icon:'💰', group:'finanzas',
+    fields:[
+      {key:'fecha',label:'Fecha',type:'date',required:true},
+      {key:'tipo',label:'Tipo',type:'select',options:['Ingreso','Egreso'],required:true,filterable:true},
+      {key:'categoria',label:'Categoría',type:'text'},
+      {key:'concepto',label:'Concepto',type:'text'},
+      {key:'monto',label:'Monto',type:'number',required:true},
+      {key:'medioPago',label:'Medio de pago',type:'select',options:['Efectivo','Transferencia','Otro']},
+    ],
+    list:['fecha','tipo','categoria','concepto','monto']
+  },
+  donaciones:{
+    label:'Donaciones', icon:'🎁', group:'finanzas',
+    fields:[
+      {key:'fecha',label:'Fecha',type:'date',required:true},
+      {key:'donante',label:'Donante',type:'text'},
+      {key:'tipo',label:'Tipo',type:'select',options:['Dinero','Especie']},
+      {key:'monto',label:'Monto (si es dinero)',type:'number'},
+      {key:'descripcion',label:'Descripción (si es especie)',type:'textarea'},
+      {key:'destino',label:'Destino / uso',type:'text'},
+    ],
+    list:['fecha','donante','tipo','monto']
+  },
+  cooperadora:{
+    label:'Cooperadora', icon:'🤝', group:'finanzas',
+    fields:[
+      {key:'fecha',label:'Fecha',type:'date',required:true},
+      {key:'tipo',label:'Tipo',type:'select',options:['Alta de socio','Cuota','Actividad / Evento','Gasto']},
+      {key:'nombre',label:'Nombre / detalle',type:'text'},
+      {key:'monto',label:'Monto',type:'number'},
+      {key:'estado',label:'Estado',type:'select',options:['Pendiente','Pagado','Cancelado']},
+    ],
+    list:['fecha','tipo','nombre','monto','estado']
+  },
+};
+
+// módulos con vistas propias además del listado genérico
+MODULES.calificaciones = {
+  label:'Calificaciones', icon:'📊', group:'academico',
+  fields:[
+    {key:'alumnoId',label:'Alumno',type:'ref',ref:'alumnos',display:'nombre',required:true,filterable:true},
+    {key:'materiaId',label:'Materia',type:'ref',ref:'materias',display:'nombre',required:true,filterable:true},
+    {key:'periodo',label:'Período',type:'select',options:['1er Trimestre','2do Trimestre','3er Trimestre','Anual'],filterable:true},
+    {key:'nota',label:'Nota',type:'text',required:true},
+    {key:'fecha',label:'Fecha',type:'date'},
+    {key:'observaciones',label:'Observaciones',type:'textarea'},
+  ],
+  list:['alumnoId','materiaId','periodo','nota','fecha'],
+  extraTabs:[{key:'carga',label:'⚡ Carga rápida',render:renderCargaRapidaCalificaciones}]
+};
+MODULES.presentismo = {
+  label:'Presentismo Alumnos', icon:'✅', group:'academico',
+  fields:[
+    {key:'alumnoId',label:'Alumno',type:'ref',ref:'alumnos',display:'nombre',required:true,filterable:true},
+    {key:'fecha',label:'Fecha',type:'date',required:true},
+    {key:'estado',label:'Estado',type:'select',options:['Presente','Ausente','Tarde','Justificada'],filterable:true},
+  ],
+  list:['alumnoId','fecha','estado'],
+  extraTabs:[
+    {key:'tomar',label:'🗓️ Tomar asistencia',render:renderTomarAsistencia},
+    {key:'stats',label:'📊 Estadísticas',render:renderStatsPresentismo}
+  ]
+};
+
+const GROUP_LABELS = {academico:'Académico', personal:'Personal', edificio:'Edificio e Insumos',
+  eventos:'Eventos', finanzas:'Finanzas'};
+const GROUP_ORDER = ['academico','personal','edificio','eventos','finanzas'];
+
+/* ---------------------------------------------------------------------
+   4. NAVEGACIÓN
+--------------------------------------------------------------------- */
+let currentPage = 'dashboard';
+
+function buildNav(){
+  const c = qs('#nav-container');
+  c.innerHTML = '';
+  // Inicio
+  const homeGroup = el(`<nav class="navgroup"></nav>`);
+  homeGroup.appendChild(navItemHtml('dashboard','🏠','Inicio'));
+  c.appendChild(homeGroup);
+
+  GROUP_ORDER.forEach(g=>{
+    const items = Object.entries(MODULES).filter(([k,m])=>m.group===g);
+    if(!items.length) return;
+    const grp = el(`<nav class="navgroup"><div class="grouplabel">${GROUP_LABELS[g]}</div></nav>`);
+    items.forEach(([key,m])=> grp.appendChild(navItemHtml(key,m.icon,m.label)));
+    c.appendChild(grp);
+  });
+
+  const dataGroup = el(`<nav class="navgroup"><div class="grouplabel">Datos</div></nav>`);
+  dataGroup.appendChild(navItemHtml('backup','💾','Backup / Restauración'));
+  dataGroup.appendChild(navItemHtml('config','⚙️','Configuración'));
+  c.appendChild(dataGroup);
+}
+function navItemHtml(key,icon,label){
+  const a = el(`<a href="javascript:void(0)" class="navitem" data-page="${key}">${icon} ${label}</a>`);
+  a.onclick = ()=>navGo(key);
+  return a;
+}
+function navGo(pageKey, tab){
+  currentPage = pageKey;
+  document.querySelectorAll('.navitem').forEach(n=>n.classList.toggle('active', n.dataset.page===pageKey));
+  document.querySelectorAll('#sidebar.open').forEach(s=>s.classList.remove('open'));
+  renderPage(pageKey, tab);
+}
+function toggleSidebar(){ qs('#sidebar').classList.toggle('open'); }
+
+/* ---------------------------------------------------------------------
+   5. RENDER DE PÁGINAS
+--------------------------------------------------------------------- */
+async function renderPage(pageKey, tab){
+  const main = qs('#main-content');
+  qs('#page-title').textContent = pageTitle(pageKey);
+  main.innerHTML = '<div class="empty">Cargando…</div>';
+
+  if(pageKey === 'dashboard') return renderDashboard(main);
+  if(pageKey === 'config') return renderConfig(main);
+  if(pageKey === 'backup') return renderBackup(main);
+
+  const mod = MODULES[pageKey];
+  if(!mod){ main.innerHTML = '<div class="empty">Página no encontrada.</div>'; return; }
+  await renderModulePage(pageKey, mod, main, tab);
+}
+function pageTitle(key){
+  if(key==='dashboard') return 'Inicio';
+  if(key==='config') return 'Configuración';
+  if(key==='backup') return 'Backup / Restauración';
+  return MODULES[key] ? MODULES[key].icon+' '+MODULES[key].label : key;
+}
+
+/* ------------------- Página genérica de módulo (con tabs) ------------------- */
+async function renderModulePage(key, mod, main, activeTab){
+  const tabs = [{key:'listado',label:'📋 Listado'}].concat(mod.extraTabs?mod.extraTabs.map(t=>({key:t.key,label:t.label})):[]);
+  activeTab = activeTab || 'listado';
+
+  main.innerHTML = `
+    <div class="tabs" id="mod-tabs"></div>
+    <div id="mod-tab-content"></div>
+  `;
+  const tabsEl = qs('#mod-tabs', main);
+  tabs.forEach(t=>{
+    const b = el(`<div class="tab ${t.key===activeTab?'active':''}">${t.label}</div>`);
+    b.onclick = ()=>renderPage(key, t.key);
+    tabsEl.appendChild(b);
+  });
+
+  const content = qs('#mod-tab-content', main);
+  if(activeTab === 'listado'){
+    await renderCrudListado(key, mod, content);
+  } else {
+    const extra = mod.extraTabs.find(t=>t.key===activeTab);
+    await extra.render(content, key, mod);
+  }
+}
+
+/* ------------------- Listado CRUD genérico ------------------- */
+let _filterState = {}; // por módulo
+
+async function renderCrudListado(key, mod, container){
+  const [records, refCache] = await Promise.all([ dbGetAll(key), loadRefCache(mod) ]);
+
+  const filterFields = mod.fields.filter(f=>f.filterable);
+  _filterState[key] = _filterState[key] || {};
+
+  let html = `<div class="row-actions">
+      <button class="btn primary" id="btn-add">+ Agregar</button>
+      <button class="btn" id="btn-export">📥 Exportar Excel</button>
+      <button class="btn" id="btn-import">📤 Importar Excel</button>
+      <input type="file" id="file-import" accept=".xlsx,.xls,.csv" style="display:none">
+    </div>`;
+
+  if(filterFields.length){
+    html += `<div class="filters">`;
+    filterFields.forEach(f=>{
+      html += `<select data-filter="${f.key}"><option value="">${f.label}: Todos</option>`;
+      if(f.type==='ref'){
+        (refCache[f.ref]||[]).forEach(r=> html += `<option value="${r.id}">${escapeHtml(r[f.display])}</option>`);
+      } else if(f.type==='select'){
+        f.options.forEach(o=> html += `<option value="${o}">${o}</option>`);
+      }
+      html += `</select>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<div class="card table-wrap"><table><thead><tr>`;
+  mod.fields.filter(f=>mod.list.includes(f.key)).forEach(f=> html += `<th>${f.label}</th>`);
+  html += `<th></th></tr></thead><tbody id="crud-tbody"></tbody></table></div>`;
+
+  container.innerHTML = html;
+  qs('#btn-add',container).onclick = ()=>openForm(key, mod, null, refCache);
+  qs('#btn-export',container).onclick = ()=>exportModuleExcel(key, mod, refCache);
+  qs('#btn-import',container).onclick = ()=>qs('#file-import',container).click();
+  qs('#file-import',container).onchange = (e)=>importModuleExcel(key, mod, e.target.files[0], ()=>renderCrudListado(key,mod,container));
+
+  container.querySelectorAll('[data-filter]').forEach(sel=>{
+    sel.onchange = ()=>{ _filterState[key][sel.dataset.filter] = sel.value; drawRows(); };
+  });
+
+  function drawRows(){
+    let list = records.slice();
+    Object.entries(_filterState[key]).forEach(([fk,val])=>{
+      if(val) list = list.filter(r => String(r[fk]) === String(val));
+    });
+    const tbody = qs('#crud-tbody', container);
+    if(!list.length){ tbody.innerHTML = `<tr><td colspan="99" class="empty">No hay registros todavía.</td></tr>`; return; }
+    tbody.innerHTML = '';
+    list.slice().reverse().forEach(rec=>{
+      const tr = el(`<tr></tr>`);
+      mod.fields.filter(f=>mod.list.includes(f.key)).forEach(f=>{
+        tr.appendChild(el(`<td>${displayValue(f, rec[f.key], refCache)}</td>`));
+      });
+      const tdActions = el(`<td style="white-space:nowrap;">
+          <button class="btn small" data-act="edit">✏️</button>
+          <button class="btn small danger" data-act="del">🗑️</button>
+        </td>`);
+      tdActions.querySelector('[data-act="edit"]').onclick = ()=>openForm(key, mod, rec, refCache);
+      tdActions.querySelector('[data-act="del"]').onclick = async ()=>{
+        if(confirm('¿Eliminar este registro?')){ await dbDelete(key, rec.id); renderCrudListado(key,mod,container); }
+      };
+      tr.appendChild(tdActions);
+      tbody.appendChild(tr);
+    });
+  }
+  drawRows();
+}
+
+async function loadRefCache(mod){
+  const cache = {};
+  for(const f of mod.fields){
+    if((f.type==='ref'||f.type==='multiref') && !cache[f.ref]) cache[f.ref] = await dbGetAll(f.ref);
+  }
+  return cache;
+}
+function displayValue(f, val, refCache){
+  if(val==null || val==='') return '—';
+  if(f.type==='ref'){
+    const list = refCache[f.ref]||[];
+    const found = list.find(r=>String(r.id)===String(val));
+    return found ? escapeHtml(found[f.display]) : '—';
+  }
+  if(f.type==='multiref'){
+    const list = refCache[f.ref]||[];
+    const ids = Array.isArray(val)?val:[];
+    return ids.map(id=>{ const f2=list.find(r=>String(r.id)===String(id)); return f2?escapeHtml(f2[f.display]):null; }).filter(Boolean).join(', ') || '—';
+  }
+  if(f.type==='checkbox') return val ? '<span class="badge green">Sí</span>' : '<span class="badge gray">No</span>';
+  if(f.type==='date') return fmtDate(val);
+  if(f.type==='number') return f.key.toLowerCase().includes('costo')||f.key.toLowerCase().includes('monto') ? fmtMoney(val) : val;
+  if(f.key==='monto'||f.key==='costoTotal'||f.key==='costoEstimado'||f.key==='costoReal'||f.key==='costoPorAlumno') return fmtMoney(val);
+  return escapeHtml(val);
+}
+
+/* ------------------- Formulario modal genérico ------------------- */
+async function openForm(key, mod, existing, refCache){
+  refCache = refCache || await loadRefCache(mod);
+  const overlay = qs('#modal-overlay');
+  const box = qs('#modal-box');
+  let html = `<h3>${existing?'Editar':'Agregar'} — ${mod.label}</h3><form id="crud-form">`;
+  mod.fields.forEach(f=>{
+    const val = existing ? existing[f.key] : '';
+    html += `<div class="field"><label>${f.label}${f.required?' *':''}</label>`;
+    if(f.type==='textarea'){
+      html += `<textarea name="${f.key}">${existing?escapeHtml(val||''):''}</textarea>`;
+    } else if(f.type==='select'){
+      html += `<select name="${f.key}"><option value="">-- Seleccionar --</option>` +
+        f.options.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('') + `</select>`;
+    } else if(f.type==='ref'){
+      const list = refCache[f.ref]||[];
+      html += `<select name="${f.key}"><option value="">-- Ninguno --</option>` +
+        list.map(r=>`<option value="${r.id}" ${String(val)===String(r.id)?'selected':''}>${escapeHtml(r[f.display])}</option>`).join('') + `</select>`;
+    } else if(f.type==='multiref'){
+      const list = refCache[f.ref]||[];
+      const selected = Array.isArray(val)?val.map(String):[];
+      html += `<div class="checklist">` + list.map(r=>
+        `<label><input type="checkbox" name="mref_${f.key}" value="${r.id}" ${selected.includes(String(r.id))?'checked':''}> ${escapeHtml(r[f.display])}</label>`
+      ).join('') + `</div>`;
+    } else if(f.type==='checkbox'){
+      html += `<label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" name="${f.key}" ${val?'checked':''}> Sí</label>`;
+    } else {
+      html += `<input type="${f.type}" name="${f.key}" value="${existing?escapeHtml(val||''):''}" ${f.required?'required':''}>`;
+    }
+    html += `</div>`;
+  });
+  html += `<div class="modal-actions">
+      <button type="button" class="btn" id="btn-cancel">Cancelar</button>
+      <button type="submit" class="btn primary">Guardar</button>
+    </div></form>`;
+  box.innerHTML = html;
+  overlay.classList.add('show');
+  qs('#btn-cancel', box).onclick = ()=> overlay.classList.remove('show');
+  qs('#crud-form', box).onsubmit = async (e)=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const obj = existing ? {...existing} : {};
+    mod.fields.forEach(f=>{
+      if(f.type==='multiref'){
+        obj[f.key] = fd.getAll('mref_'+f.key).map(v=>Number(v)||v);
+      } else if(f.type==='checkbox'){
+        obj[f.key] = fd.get(f.key) === 'on';
+      } else if(f.type==='number'){
+        const v = fd.get(f.key); obj[f.key] = v===''?null:Number(v);
+      } else if(f.type==='ref'){
+        const v = fd.get(f.key); obj[f.key] = v?Number(v):null;
+      } else {
+        obj[f.key] = fd.get(f.key);
+      }
+    });
+    await dbPut(key, obj);
+    overlay.classList.remove('show');
+    renderPage(currentPage);
+  };
+}
+
+/* ------------------- Excel export / import genérico ------------------- */
+async function exportModuleExcel(key, mod, refCache){
+  const records = await dbGetAll(key);
+  const rows = records.map(rec=>{
+    const row = {};
+    mod.fields.forEach(f=>{
+      let v = rec[f.key];
+      if(f.type==='ref'){
+        const list = refCache[f.ref]||[];
+        const found = list.find(r=>String(r.id)===String(v));
+        v = found ? found[f.display] : '';
+      } else if(f.type==='multiref'){
+        const list = refCache[f.ref]||[];
+        v = (Array.isArray(v)?v:[]).map(id=>{ const f2=list.find(r=>String(r.id)===String(id)); return f2?f2[f.display]:null; }).filter(Boolean).join(', ');
+      } else if(f.type==='checkbox'){
+        v = v ? 'Sí' : 'No';
+      }
+      row[f.label] = v==null?'':v;
+    });
+    return row;
+  });
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, mod.label.slice(0,31));
+  XLSX.writeFile(wb, `${mod.label.replace(/[^\w]+/g,'_')}.xlsx`);
+}
+async function importModuleExcel(key, mod, file, cb){
+  if(!file) return;
+  const data = await file.arrayBuffer();
+  const wb = XLSX.read(data, {type:'array'});
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(sheet, {defval:''});
+  const refCache = await loadRefCache(mod);
+  let count = 0;
+  for(const row of rows){
+    const obj = {};
+    mod.fields.forEach(f=>{
+      let v = row[f.label];
+      if(v === undefined) v = row[f.key];
+      if(f.type==='ref' && v){
+        const list = refCache[f.ref]||[];
+        const found = list.find(r=>String(r[f.display]).trim().toLowerCase()===String(v).trim().toLowerCase());
+        v = found ? found.id : null;
+      } else if(f.type==='checkbox'){
+        v = /^(s|si|sí|yes|true|1)$/i.test(String(v));
+      } else if(f.type==='number'){
+        v = v===''?null:Number(v);
+      }
+      obj[f.key] = v==='' ? null : v;
+    });
+    await dbPut(key, obj);
+    count++;
+  }
+  alert(`Se importaron ${count} registros a ${mod.label}.`);
+  if(cb) cb();
+}
+
+/* ---------------------------------------------------------------------
+   6. VISTAS ESPECIALES — ACADÉMICO EN PROFUNDIDAD
+--------------------------------------------------------------------- */
+
+/* ---- Presentismo: Tomar asistencia del día ---- */
+async function renderTomarAsistencia(container){
+  const [grados, alumnos] = await Promise.all([dbGetAll('grados'), dbGetAll('alumnos')]);
+  container.innerHTML = `
+    <div class="card">
+      <div class="filters">
+        <select id="ta-grado"><option value="">-- Elegir grado --</option>
+          ${grados.map(g=>`<option value="${g.id}">${escapeHtml(g.nombre)}</option>`).join('')}
+        </select>
+        <input type="date" id="ta-fecha" value="${todayISO()}">
+      </div>
+      <div id="ta-lista"></div>
+    </div>`;
+  const draw = async ()=>{
+    const gradoId = qs('#ta-grado').value;
+    const fecha = qs('#ta-fecha').value;
+    const lista = qs('#ta-lista');
+    if(!gradoId){ lista.innerHTML = '<div class="empty">Elegí un grado para tomar asistencia.</div>'; return; }
+    const alumnosGrado = alumnos.filter(a=>String(a.gradoId)===String(gradoId) && a.estado!=='Baja' && a.estado!=='Egresado');
+    if(!alumnosGrado.length){ lista.innerHTML = '<div class="empty">Ese grado no tiene alumnos activos cargados.</div>'; return; }
+    const existentes = await dbGetAll('presentismo');
+    lista.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Alumno</th><th>Estado</th></tr></thead>
+      <tbody>${alumnosGrado.map(a=>{
+        const prev = existentes.find(p=>String(p.alumnoId)===String(a.id) && p.fecha===fecha);
+        const estadoActual = prev ? prev.estado : 'Presente';
+        return `<tr data-alumno="${a.id}"><td>${escapeHtml(a.nombre)}</td><td>
+          <select data-estado>
+            ${['Presente','Ausente','Tarde','Justificada'].map(o=>`<option value="${o}" ${o===estadoActual?'selected':''}>${o}</option>`).join('')}
+          </select></td></tr>`;
+      }).join('')}</tbody></table></div>
+      <div class="row-actions" style="margin-top:14px;"><button class="btn primary" id="ta-guardar">Guardar asistencia del día</button></div>`;
+    qs('#ta-guardar').onclick = async ()=>{
+      const rows = lista.querySelectorAll('tr[data-alumno]');
+      for(const row of rows){
+        const alumnoId = Number(row.dataset.alumno);
+        const estado = row.querySelector('[data-estado]').value;
+        const prev = existentes.find(p=>String(p.alumnoId)===String(alumnoId) && p.fecha===fecha);
+        const obj = prev ? {...prev, estado} : {alumnoId, fecha, estado};
+        await dbPut('presentismo', obj);
+      }
+      alert('Asistencia guardada.');
+      draw();
+    };
+  };
+  qs('#ta-grado').onchange = draw;
+  qs('#ta-fecha').onchange = draw;
+}
+
+/* ---- Presentismo: Estadísticas ---- */
+async function renderStatsPresentismo(container){
+  const [alumnos, presentismo, grados] = await Promise.all([dbGetAll('alumnos'), dbGetAll('presentismo'), dbGetAll('grados')]);
+  const rows = alumnos.filter(a=>a.estado==='Activo').map(a=>{
+    const regs = presentismo.filter(p=>String(p.alumnoId)===String(a.id));
+    const total = regs.length;
+    const presentes = regs.filter(r=>r.estado==='Presente'||r.estado==='Tarde').length;
+    const pct = total ? Math.round((presentes/total)*100) : null;
+    const grado = grados.find(g=>String(g.id)===String(a.gradoId));
+    return {nombre:a.nombre, grado:grado?grado.nombre:'—', total, pct};
+  }).sort((a,b)=> (a.pct==null?101:a.pct) - (b.pct==null?101:b.pct));
+  container.innerHTML = `<div class="card table-wrap"><table><thead><tr>
+      <th>Alumno</th><th>Grado</th><th>Registros</th><th>% Asistencia</th></tr></thead>
+      <tbody>${rows.length ? rows.map(r=>`<tr><td>${escapeHtml(r.nombre)}</td><td>${escapeHtml(r.grado)}</td>
+        <td>${r.total}</td><td>${r.pct==null?'—':badgePct(r.pct)}</td></tr>`).join('') :
+        '<tr><td colspan="4" class="empty">Todavía no hay asistencia cargada.</td></tr>'}</tbody></table></div>`;
+}
+function badgePct(pct){
+  const cls = pct>=90?'green':pct>=75?'orange':'red';
+  return `<span class="badge ${cls}">${pct}%</span>`;
+}
+
+/* ---- Calificaciones: Carga rápida por grado/materia/período ---- */
+async function renderCargaRapidaCalificaciones(container){
+  const [grados, materias, alumnos] = await Promise.all([dbGetAll('grados'), dbGetAll('materias'), dbGetAll('alumnos')]);
+  container.innerHTML = `
+    <div class="card">
+      <div class="filters">
+        <select id="cr-grado"><option value="">-- Grado --</option>${grados.map(g=>`<option value="${g.id}">${escapeHtml(g.nombre)}</option>`).join('')}</select>
+        <select id="cr-materia"><option value="">-- Materia --</option>${materias.map(m=>`<option value="${m.id}">${escapeHtml(m.nombre)}</option>`).join('')}</select>
+        <select id="cr-periodo">${['1er Trimestre','2do Trimestre','3er Trimestre','Anual'].map(o=>`<option value="${o}">${o}</option>`).join('')}</select>
+      </div>
+      <div id="cr-lista"></div>
+    </div>`;
+  const draw = async ()=>{
+    const gradoId = qs('#cr-grado').value, materiaId = qs('#cr-materia').value, periodo = qs('#cr-periodo').value;
+    const lista = qs('#cr-lista');
+    if(!gradoId || !materiaId){ lista.innerHTML = '<div class="empty">Elegí grado y materia.</div>'; return; }
+    const alumnosGrado = alumnos.filter(a=>String(a.gradoId)===String(gradoId) && a.estado==='Activo');
+    if(!alumnosGrado.length){ lista.innerHTML = '<div class="empty">Ese grado no tiene alumnos activos.</div>'; return; }
+    const existentes = await dbGetAll('calificaciones');
+    lista.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Alumno</th><th>Nota</th></tr></thead>
+      <tbody>${alumnosGrado.map(a=>{
+        const prev = existentes.find(c=>String(c.alumnoId)===String(a.id)&&String(c.materiaId)===String(materiaId)&&c.periodo===periodo);
+        return `<tr data-alumno="${a.id}"><td>${escapeHtml(a.nombre)}</td><td><input type="text" data-nota value="${prev?escapeHtml(prev.nota||''):''}" placeholder="Nota"></td></tr>`;
+      }).join('')}</tbody></table></div>
+      <div class="row-actions" style="margin-top:14px;"><button class="btn primary" id="cr-guardar">Guardar notas</button></div>`;
+    qs('#cr-guardar').onclick = async ()=>{
+      const rows = lista.querySelectorAll('tr[data-alumno]');
+      for(const row of rows){
+        const alumnoId = Number(row.dataset.alumno);
+        const nota = row.querySelector('[data-nota]').value;
+        if(nota==='') continue;
+        const prev = existentes.find(c=>String(c.alumnoId)===String(alumnoId)&&String(c.materiaId)===String(materiaId)&&c.periodo===periodo);
+        const obj = prev ? {...prev, nota} : {alumnoId, materiaId:Number(materiaId), periodo, nota, fecha:todayISO()};
+        await dbPut('calificaciones', obj);
+      }
+      alert('Notas guardadas.');
+      draw();
+    };
+  };
+  ['cr-grado','cr-materia','cr-periodo'].forEach(id=> qs('#'+id).onchange = draw);
+}
+
+/* ---- Ausencias docentes: estadísticas ---- */
+async function renderStatsDocentes(container){
+  const [docentes, ausencias] = await Promise.all([dbGetAll('docentes'), dbGetAll('ausenciasDocentes')]);
+  const rows = docentes.map(d=>{
+    const regs = ausencias.filter(a=>String(a.docenteId)===String(d.id));
+    const justificadas = regs.filter(a=>a.tipo==='Justificada').length;
+    const injustificadas = regs.filter(a=>a.tipo==='Injustificada').length;
+    return {nombre:d.nombre, total:regs.length, justificadas, injustificadas};
+  }).sort((a,b)=>b.total-a.total);
+  container.innerHTML = `<div class="card table-wrap"><table><thead><tr>
+      <th>Docente</th><th>Total ausencias</th><th>Justificadas</th><th>Injustificadas</th></tr></thead>
+      <tbody>${rows.length ? rows.map(r=>`<tr><td>${escapeHtml(r.nombre)}</td><td>${r.total}</td>
+        <td><span class="badge green">${r.justificadas}</span></td><td><span class="badge red">${r.injustificadas}</span></td></tr>`).join('') :
+        '<tr><td colspan="4" class="empty">No hay docentes cargados todavía.</td></tr>'}</tbody></table></div>`;
+}
+
+/* ---------------------------------------------------------------------
+   7. DASHBOARD
+--------------------------------------------------------------------- */
+async function renderDashboard(main){
+  const [alumnos, docentes, aulas, actos, caja, amonestaciones, ausencias, config] = await Promise.all(
+    ['alumnos','docentes','aulas','actos','caja','amonestaciones','ausenciasDocentes','config'].map(dbGetAll)
+  );
+  const cfg = (await dbGet('config','main')) || {};
+  const activos = alumnos.filter(a=>a.estado==='Activo').length;
+  const aulasProblema = aulas.filter(a=>a.estado && a.estado!=='Operativa').length;
+  const saldo = caja.reduce((s,c)=> s + (c.tipo==='Ingreso'? Number(c.monto||0) : -Number(c.monto||0)), 0);
+  const hoy = todayISO();
+  const proximosActos = actos.filter(a=>a.fecha>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,4);
+  const ultimasAmonestaciones = amonestaciones.slice().sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')).slice(0,5);
+  const mesActual = hoy.slice(0,7);
+  const ausenciasMes = ausencias.filter(a=>(a.fecha||'').startsWith(mesActual)).length;
+
+  main.innerHTML = `
+    <div class="kpi-grid">
+      <div class="kpi"><div class="num">${activos}</div><div class="lbl">Alumnos activos</div></div>
+      <div class="kpi"><div class="num">${docentes.length}</div><div class="lbl">Docentes</div></div>
+      <div class="kpi"><div class="num">${aulasProblema}</div><div class="lbl">Aulas con problemas</div></div>
+      <div class="kpi"><div class="num">${fmtMoney(saldo)}</div><div class="lbl">Saldo de caja</div></div>
+      <div class="kpi"><div class="num">${ausenciasMes}</div><div class="lbl">Ausencias docentes (mes)</div></div>
+    </div>
+
+    <div class="section-title">🎉 Próximos actos</div>
+    <div class="card table-wrap"><table><thead><tr><th>Fecha</th><th>Título</th><th>Estado</th></tr></thead>
+      <tbody>${proximosActos.length ? proximosActos.map(a=>`<tr><td>${fmtDate(a.fecha)}</td><td>${escapeHtml(a.titulo)}</td><td>${escapeHtml(a.estado||'')}</td></tr>`).join('')
+        : '<tr><td colspan="3" class="empty">No hay actos próximos cargados.</td></tr>'}</tbody></table></div>
+
+    <div class="section-title">⚠️ Últimas amonestaciones</div>
+    <div class="card table-wrap"><table><thead><tr><th>Fecha</th><th>Gravedad</th><th>Motivo</th></tr></thead>
+      <tbody>${ultimasAmonestaciones.length ? ultimasAmonestaciones.map(a=>`<tr><td>${fmtDate(a.fecha)}</td><td>${escapeHtml(a.gravedad||'')}</td><td>${escapeHtml(a.motivo||'')}</td></tr>`).join('')
+        : '<tr><td colspan="3" class="empty">No hay amonestaciones cargadas.</td></tr>'}</tbody></table></div>
+  `;
+}
+
+/* ---------------------------------------------------------------------
+   8. CONFIGURACIÓN
+--------------------------------------------------------------------- */
+async function renderConfig(main){
+  const cfg = (await dbGet('config','main')) || {id:'main'};
+  main.innerHTML = `
+    <div class="card" style="max-width:480px;">
+      <div class="field"><label>Nombre de la escuela</label><input id="cfg-nombre" value="${escapeHtml(cfg.nombreEscuela||'')}"></div>
+      <div class="field"><label>Dirección</label><input id="cfg-direccion" value="${escapeHtml(cfg.direccion||'')}"></div>
+      <div class="field"><label>Teléfono</label><input id="cfg-telefono" value="${escapeHtml(cfg.telefono||'')}"></div>
+      <div class="field"><label>Director/a</label><input id="cfg-director" value="${escapeHtml(cfg.director||'')}"></div>
+      <div class="row-actions"><button class="btn primary" id="cfg-guardar">Guardar</button></div>
+    </div>`;
+  qs('#cfg-guardar').onclick = async ()=>{
+    const obj = {id:'main', nombreEscuela: qs('#cfg-nombre').value, direccion: qs('#cfg-direccion').value,
+      telefono: qs('#cfg-telefono').value, director: qs('#cfg-director').value};
+    await dbPut('config', obj);
+    applyConfigToHeader(obj);
+    alert('Configuración guardada.');
+  };
+}
+function applyConfigToHeader(cfg){
+  qs('#sb-nombre').textContent = cfg.nombreEscuela || 'Frigurso Escuela';
+}
+
+/* ---------------------------------------------------------------------
+   9. BACKUP / RESTAURACIÓN
+--------------------------------------------------------------------- */
+async function renderBackup(main){
+  main.innerHTML = `
+    <div class="card" style="max-width:520px;">
+      <p style="color:var(--muted);font-size:13.5px;">
+        Todos los datos viven únicamente en esta computadora (IndexedDB del navegador).
+        Hacé un backup con frecuencia — si se borran los datos del navegador o se reinstala el sistema, se pierde todo lo que no esté respaldado.
+      </p>
+      <div class="row-actions">
+        <button class="btn primary" id="btn-backup">💾 Descargar backup completo (JSON)</button>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Restaurar desde backup</label>
+        <input type="file" id="file-restore" accept=".json">
+      </div>
+    </div>`;
+  qs('#btn-backup').onclick = async ()=>{
+    const dump = {};
+    for(const s of STORES) dump[s] = await dbGetAll(s);
+    const blob = new Blob([JSON.stringify(dump,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `frigurso_escuela_backup_${todayISO()}.json`; a.click();
+    URL.revokeObjectURL(url);
+  };
+  qs('#file-restore').onchange = async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(!confirm('Esto va a REEMPLAZAR todos los datos actuales por los del backup. ¿Continuar?')) return;
+    const text = await file.text();
+    const dump = JSON.parse(text);
+    for(const s of STORES){
+      await dbClear(s);
+      for(const rec of (dump[s]||[])) await dbPut(s, rec);
+    }
+    alert('Backup restaurado con éxito.');
+    boot();
+  };
+}
+
+/* ---------------------------------------------------------------------
+   10. ARRANQUE
+--------------------------------------------------------------------- */
+async function finishSplash(){
+  const nombre = qs('#splash-nombre').value.trim();
+  if(!nombre){ alert('Contame el nombre de la escuela para continuar.'); return; }
+  const direccion = qs('#splash-direccion').value.trim();
+  await dbPut('config', {id:'main', nombreEscuela:nombre, direccion});
+  qs('#splash').style.display = 'none';
+  startApp();
+}
+
+async function startApp(){
+  const cfg = (await dbGet('config','main')) || {};
+  applyConfigToHeader(cfg);
+  qs('#app').classList.add('show');
+  buildNav();
+  navGo('dashboard');
+}
+
+async function boot(){
+  await openDB();
+  const cfg = await dbGet('config','main');
+  if(cfg && cfg.nombreEscuela){
+    qs('#splash').style.display = 'none';
+    startApp();
+  } else {
+    qs('#splash').style.display = 'flex';
+  }
+}
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=> navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+boot();
+</script>
+</body>
+</html>
