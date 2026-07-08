@@ -278,6 +278,19 @@ const MODULES = {
     ],
     list:['alumnoId','fecha','gravedad','motivo']
   },
+  directivos:{
+    label:'Equipo Directivo', icon:'🎓', group:'personal',
+    fields:[
+      {key:'nombre',label:'Nombre completo',type:'text',required:true},
+      {key:'cargo',label:'Cargo',type:'select',options:['Director/a','Vicedirector/a','Secretario/a','Secretario/a de Asuntos Docentes','Preceptor/a','Otro'],filterable:true},
+      {key:'dni',label:'DNI',type:'text'},
+      {key:'telefono',label:'Teléfono',type:'text'},
+      {key:'email',label:'Email',type:'text'},
+      {key:'fechaIngreso',label:'Fecha de ingreso',type:'date'},
+      {key:'notas',label:'Notas',type:'textarea'},
+    ],
+    list:['nombre','cargo','telefono','email']
+  },
   docentes:{
     label:'Docentes', icon:'🧑‍🏫', group:'personal',
     fields:[
