@@ -615,8 +615,8 @@ async function renderCrudListado(key, mod, container){
         tr.appendChild(el(`<td>${displayValue(f, rec[f.key], refCache)}</td>`));
       });
       const tdActions = el(`<td style="white-space:nowrap;">
-          <button class="btn small" data-act="edit">✏️</button>
-          <button class="btn small danger" data-act="del">🗑️</button>
+          <button class="btn small" data-act="edit">✏️ Editar</button>
+          <button class="btn small danger" data-act="del">🗑️ Eliminar</button>
         </td>`);
       tdActions.querySelector('[data-act="edit"]').onclick = ()=>openForm(key, mod, rec, refCache);
       tdActions.querySelector('[data-act="del"]').onclick = async ()=>{

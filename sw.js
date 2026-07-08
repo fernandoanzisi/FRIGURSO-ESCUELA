@@ -1,4 +1,4 @@
-const CACHE = 'escuela-v1';
+const CACHE = 'escuela-v2';
 const PRECACHE = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
