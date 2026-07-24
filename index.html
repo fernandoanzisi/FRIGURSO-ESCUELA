@@ -1179,10 +1179,10 @@ async function _hashPass(pass){
 }
 function fgOcultarLock(){
   document.getElementById('fg-lock').style.display = 'none';
-  try{ sessionStorage.setItem('escuela_unlocked','1'); }catch(e){}
+  try{ localStorage.setItem('escuela_unlocked','1'); }catch(e){}
 }
 function fgMostrarLock(){
-  try{ sessionStorage.removeItem('escuela_unlocked'); }catch(e){}
+  try{ localStorage.removeItem('escuela_unlocked'); }catch(e){}
   document.getElementById('lk-pass-in').value = '';
   fgHideErr('lk-ing-err');
   document.getElementById('fg-lock').style.display = 'flex';
@@ -1214,7 +1214,7 @@ if(localStorage.getItem('escuela_pass_hash')){
   document.getElementById('lk-crear').style.display = 'none';
   document.getElementById('lk-ingresar').style.display = 'block';
   let yaDesbloqueado = false;
-  try{ yaDesbloqueado = sessionStorage.getItem('escuela_unlocked') === '1'; }catch(e){}
+  try{ yaDesbloqueado = localStorage.getItem('escuela_unlocked') === '1'; }catch(e){}
   if(yaDesbloqueado) fgOcultarLock();
 }
 </script>
